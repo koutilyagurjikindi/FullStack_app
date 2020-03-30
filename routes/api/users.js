@@ -1,13 +1,11 @@
 var mongoose = require('mongoose')
 var router = require('express').Router();
 var passport = require('passport')
-var User = mongoose.model('User')
+var User = mongoose.model("User")
 var auth = require('../auth')
 
 router.post('/users',function(req,res,next){
-  console.log(req,"++++++++++++++++++++++++",res, " *************************  clea",next,"                 =====================                   ")
   var user = new User() 
-
   user.username = req.body.user.username;
   user.email = req.body.user.email;
   user.setPassword(req.body.user.password);
@@ -28,6 +26,7 @@ router.post('/users/login',function(req,res,next){
   passport.authenticate('local',{session:false},function(err,user,info){
     if(err){ return next(err);}
     if(user){
+      console.log("user",user)
       user.token = user.generateJWT();
       return res.json({user:user.toAuthJSON()})
     }else{

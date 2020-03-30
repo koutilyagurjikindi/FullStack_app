@@ -14,6 +14,8 @@ passport.use(new LocalStrategy({
     }
     return done(null, user)
   })
-  .catch(done)
+  .catch(error=>{
+    console.log(error)
+  })
 }
 ))
