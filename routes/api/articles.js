@@ -1,17 +1,14 @@
 var router = require("express").Router();
-var passport = require("passport");
 var mongoose = require("mongoose");
 var Article = mongoose.model("Article");
 var User = mongoose.model("User");
 var auth = require("../auth");
 
 router.post('/', auth.required, function(req, res, next) {
-  console.log(req.payload.id, req.body.article, "dkfjdkjfkdjkfjdkjfkdjfkdjf")
   User.findById(req.payload.id).then(function(user){
     if (!user) { return res.sendStatus(401); }
 
     var article = new Article(req.body.article);
-    console.log(article)
 
     article.author = user;
 
