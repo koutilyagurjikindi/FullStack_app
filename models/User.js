@@ -1,30 +1,34 @@
-var mongoose = require('mongoose')
-var uniqueValidator = require('mongoose-unique-validator')
-var crypto = require('crypto')
-var jwt = require('jsonwebtoken')
-var secret = require('../config').secret;
+var mongoose = require("mongoose");
+var uniqueValidator = require("mongoose-unique-validator");
+var crypto = require("crypto");
+var jwt = require("jsonwebtoken");
+var secret = require("../config").secret;
 
-var UserSchema = new mongoose.Schema({
-  username:{
-    type: String,
-    unique: true,
-    lowercase: true,
-    required: [true, "can't be blank"],
-    match: [/^[a-zA-Z0-9]+$/, "is invalid"],
-    index:true
+var UserSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      required: [true, "can't be blank"],
+      match: [/^[a-zA-Z0-9]+$/, "is invalid"],
+      index: true
+    },
+    email: {
+      type: String,
+      unique: true,
+      lowercase: true,
+      required: [true, "can't be blank"],
+      index: true
+    },
+    favorites: [{ type: mongoose.Schema.Types.ObjectId, ref: "Article" }],
+    bio: String,
+    image: String,
+    hash: String,
+    salt: String
   },
-  email:{
-    type:String,
-    unique :true,
-    lowercase: true,
-    required: [true, "can't be blank"],
-    index:true
-  },
-  bio: String,
-  image: String,
-  hash: String,
-  salt: String
-},{timestamps:true})
+  { timestamps: true, usePushEach: true }
+);
 
 UserSchema.plugin(uniqueValidator, { message: "is already taken." });
 
@@ -52,7 +56,7 @@ UserSchema.methods.generateJWT = function() {
       username: this.username,
       exp: parseInt(exp.getTime() / 1000)
     },
-    secret,
+    secret
   );
 };
 
@@ -66,13 +70,37 @@ UserSchema.methods.toAuthJSON = function() {
   };
 };
 
-UserSchema.methods.toProfileJSONFor = function(){
+UserSchema.methods.toProfileJSONFor = function() {
   return {
     username: this.username,
     bio: this.bio,
-    image: this.image || 'https://static.productionready.io/images/smiley-cyrus.jpg',
-    following :false
+    image:
+      this.image || "https://static.productionready.io/images/smiley-cyrus.jpg",
+    following: false
+  };
+};
+
+UserSchema.methods.favorite = function(id) {
+   //var usernewmodel = mongoose.model('User',UserSchema);
+
+  if (this.favorites.indexOf(id) === -1) {
+    this.favorites=this.favorites.concat([id])
+    //  usernewmodel.findByIdAndUpdate({_id:id},{$push:{favorites:{$each:[id]}}}).then(result=>{
+    //    console.log(result)
+    //  })
   }
-}
+   return this.save()
+};
+
+UserSchema.methods.unfavorite = function(id) {
+  this.favorites.remove(id);
+  return this.save();
+};
+
+UserSchema.methods.isFavorite = function(id) {
+  return this.favorites.some(function(favoriteId) {
+    return favoriteId.toString() === id.toString();
+  });
+};
 
 mongoose.model("User", UserSchema);

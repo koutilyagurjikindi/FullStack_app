@@ -1,33 +1,39 @@
-var mongoose = require('mongoose');
-var uniqueValidator = require('mongoose-unique-validator');
-var slug = require('slug'); // package we'll use to auto create URL slugs
+var mongoose = require("mongoose");
+var uniqueValidator = require("mongoose-unique-validator");
+var slug = require("slug"); // package we'll use to auto create URL slugs
+var User = mongoose.model("User");
 
-var ArticleSchema = new mongoose.Schema({
-  slug: {type: String, lowercase: true, unique: true},
-  title: String,
-  description: String,
-  body: String,
-  favoritesCount: {type: Number, default: 0},
-  tagList: [{ type: String }],
-  author: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
-}, {timestamps: true});
+var ArticleSchema = new mongoose.Schema(
+  {
+    slug: { type: String, lowercase: true, unique: true },
+    title: String,
+    description: String,
+    body: String,
+    favoritesCount: { type: Number, default: 0 },
+    tagList: [{ type: String }],
+    author: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
+  },
+  { timestamps: true, usePushEach: true }
+);
 
-ArticleSchema.plugin(uniqueValidator, {message: 'is already taken'});
-
+ArticleSchema.plugin(uniqueValidator, { message: "is already taken" });
 
 ArticleSchema.methods.slugify = function() {
-  this.slug = slug(this.title) + '-' + (Math.random() * Math.pow(36, 6) | 0).toString(36);
+  this.slug =
+    slug(this.title) +
+    "-" +
+    ((Math.random() * Math.pow(36, 6)) | 0).toString(36);
 };
 
-ArticleSchema.pre('validate', function(next){
-  if(!this.slug)  {
+ArticleSchema.pre("validate", function(next) {
+  if (!this.slug) {
     this.slugify();
   }
 
   next();
-})
+});
 
-ArticleSchema.methods.toJSONFor = function(user){
+ArticleSchema.methods.toJSONFor = function(user) {
   return {
     slug: this.slug,
     title: this.title,
@@ -36,9 +42,22 @@ ArticleSchema.methods.toJSONFor = function(user){
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
     tagList: this.tagList,
+    favorited: user ? user.isFavorite(this._id) : false,
     favoritesCount: this.favoritesCount,
     author: this.author.toProfileJSONFor(user)
   };
 };
 
-mongoose.model('Article', ArticleSchema);
+ArticleSchema.methods.updateFavoriteCount = function() {
+  var article = this;
+
+  return User.count({ favorites: { $in: [article._id] } }).then(function(
+    count
+  ) {
+    article.favoritesCount = count;
+
+    return article.save();
+  });
+};
+
+mongoose.model("Article", ArticleSchema);

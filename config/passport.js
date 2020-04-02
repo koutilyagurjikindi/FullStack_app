@@ -13,9 +13,6 @@ passport.use(new LocalStrategy({
       return done(null, false, {error:{'email or password':'is invalid'}})
     }
     return done(null, user)
-  })
-  .catch(error=>{
-    console.log(error)
-  })
+  }).catch(next)
 }
 ))
