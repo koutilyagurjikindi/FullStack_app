@@ -2,6 +2,7 @@ var router = require("express").Router();
 var mongoose = require("mongoose");
 var Article = mongoose.model("Article");
 var User = mongoose.model("User");
+var Comment = mongoose.model('Comment')
 var auth = require("../auth");
 
 router.post("/", auth.required, function(req, res, next) {
@@ -114,5 +115,47 @@ router.delete('/:article/favorite', auth.required, function(req, res, next) {
     });
   }).catch(next);
 });
+
+router.post('/:article/comments', auth.required, function(req,res,next){
+  User.findById(req.payload.id).then(function(user){
+    if(!user){ res.sendStatus(401)}
+
+    var comment = new Comment(req.body.comment);
+
+    comment.article = req.article,
+    comment.author = user;
+
+    var articles = req.article
+    return comment.save().then(function(){
+
+      articles.comments=articles.comments.concat([comment])
+      return articles.save().then(function(){
+        return res.json({comment: comment.toJSONFor(user)})
+      })
+    })
+  }).catch(error=>{
+    console.log(error,"dlfkdlkfldkfld")
+  })
+})
+
+router.get('/:article/comments',auth.optional,function(req,res,next){
+  Promise.resolve(req.payload ? User.findById(req.payload.id):null).then(function(user){
+    return req.article.populate({
+      path: 'comments',
+      populate:{
+        path: 'author'
+      },
+      options:{
+        sort:{
+          createdAt: 'desc'
+        }
+      }
+    }).execPopulate().then(function(article){
+      return res.json({comments: req.article.comments.map(function(comment){
+        return comment.toJSONFor(user)
+      })})
+    })
+  })
+})
 
 module.exports = router;
