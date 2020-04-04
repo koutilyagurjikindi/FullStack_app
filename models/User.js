@@ -125,8 +125,5 @@ UserSchema.methods.isFollowing = function(id) {
   });
 };
 
-UserSchema.query.findbyname = function(name){
-  console.log(name)
-}
 
 mongoose.model("User", UserSchema);

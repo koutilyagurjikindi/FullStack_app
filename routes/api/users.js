@@ -70,10 +70,4 @@ router.put('/user',auth.required,function(req,res,next){
   }).catch(next)
 })
 
-router.post('/koutilya',auth.required,function(req,res,next){
-  User.find().findbyname('koutilya').exec(function(err,res){
-    console.log(err,res)
-  })
-})
-
 module.exports  = router
