@@ -158,4 +158,30 @@ router.get('/:article/comments',auth.optional,function(req,res,next){
   })
 })
 
+router.param('comment', function(req, res, next, id) {
+  Comment.findById(id).then(function(comment){
+    if(!comment){ return res.sendStatus(404)}
+
+    req.comment = comment
+
+    return next()
+  })
+  .catch(next)
+});
+
+ router.delete('/:article/comments/:comment', auth.required, function(req,res,next){
+  if(req.comment.author.toString() ===  req.payload.id.toString()){
+    var articles = req.article
+    articles.comments.remove(req.comment._id)
+   return  articles.save()
+   .then(Comment.find({_id: req.comment._id}).remove().exec())
+    .then(function(){
+     return res.sendStatus(204)
+    }) 
+  }
+  else {
+    return res.sendStatus(403)
+  }
+ })
+
 module.exports = router;
