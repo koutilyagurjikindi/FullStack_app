@@ -32,8 +32,10 @@ if (!isProduction) {
 }
 
 if(isProduction){
+  console.log("dkfjkdjfkd",process.env.MONGODB_URI)
   mongoose.connect(process.env.MONGODB_URI);
 } else {
+   console.log('dkfjdkfjkdjfkdjkfdk',isProduction)
   mongoose.connect('mongodb://localhost/conduit');
   mongoose.set('debug', true);
 }
@@ -66,7 +68,7 @@ if (!isProduction) {
       error: err
     }});
   });
-}
+}else{
 
 // production error handler
 // no stacktraces leaked to user
@@ -77,6 +79,7 @@ app.use(function(err, req, res, next) {
     error: {}
   }});
 });
+}
 
 // finally, let's start our server...
 var server = app.listen( process.env.PORT || 3000, function(){
